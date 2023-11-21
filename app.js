@@ -2,17 +2,24 @@ const express = require("express");  //this app kind of servers as a main method
 const path = require("path");
 const mysql = require("mysql");
 const dotenv = require("dotenv");
+const session = require('express-session');
 
 dotenv.config({ path: './.env'})
 
 const app = express();
 
 const database = mysql.createConnection({
-    host: process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'registrationsystem'
 })
+
+app.use(session({
+    secret: 'badabing', // Change this to a secret key
+    resave: false,
+    saveUninitialized: false
+}));
 
 const publicDirectory = path.join(__dirname, './public'); //i set it to the public folder, thats where a lot of plug-in logic we are going to have
 app.use(express.static(publicDirectory)); 
@@ -38,6 +45,6 @@ app.use('/', require('./routes/pages'));
 app.use('/auth', require('./routes/auth'));
 
 
-app.listen(5000, () => {
-    console.log("Server started on Port 5000");
+app.listen(5002, () => {
+    console.log("Server started on Port 5002");
 });

@@ -15,4 +15,8 @@ router.get('/mainMenu', (req, res) =>{
     res.render('mainMenu');
 });
 
+router.get('/searchClasses', (req, res) => {
+    res.render('searchClasses');
+});
+
 module.exports = router;
