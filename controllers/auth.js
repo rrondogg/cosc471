@@ -50,18 +50,53 @@ exports.searchClasses = (req, res) => {
     console.log(req.body);
     console.log("hey im in search!!")
 
-    database.query('SELECT * FROM Classes',
-        (error, results) => {
-            if(error){
-                console.log(error);
-            }
-            return res.render('searchClasses' , {
-                data: results
-            });
-        }
-    )
+    const searchText = req.body.searchClass; // Assuming searchText contains the text to search for
 
+    let query = 'SELECT * FROM Classes';
+    let queryParams = [];
+
+    // Check if searchText is provided, then modify the query accordingly
+    if (searchText) {
+        query += ' WHERE ClassName LIKE ?';
+        queryParams.push(`%${searchText}%`);
+    }
+
+
+    database.query(query, queryParams, (error, results) => {
+        if (error) {
+            console.log(error);
+        }
+        
+        return res.render('searchClasses', {
+            data: results
+        });
+    });
 };
+
+exports.deleteClass = (req, res) => {
+    const studentID = req.session.studentID; // the actual student ID
+    const crn = req.body.CRNDelete; 
+    
+    console.log(studentID);
+    console.log(crn);
+    const sql = 'DELETE FROM enrollment WHERE Student_ID = ? AND CRN = ?';
+    
+    database.query(sql, [studentID, crn], (error, results) => {
+        if (error) {
+            console.error('Error deleting enrollment:', error);
+            // Handle the error
+        } else {
+            return res.render('mainMenu',{
+                message: "Class deleted"
+            })
+            // Handle successful deletion
+        }
+    });
+    
+    
+
+}
+
 
 exports.addClass = (req, res) => {
     console.log(req.body);
@@ -78,8 +113,26 @@ exports.addClass = (req, res) => {
             if (error){
                 console.log(error);
             } else {
-                return res.render('mainMenu', {
+                return res.render('searchClasses', {
                     message: "Class added"
+                });
+            }
+        }
+    )
+}
+
+exports.displayCurrentSchedule = (req, res) => {
+    console.log(req.body);
+
+    const Student_ID = req.session.studentID;
+
+    database.query('SELECT c.CourseNumber, c.ClassName, c.MeetingTimes, c.BuildingAndRoomNo, e.CRN, p.Name FROM classes c JOIN enrollment e ON c.CRN = e.CRN JOIN teaches t ON c.CRN = t.CRN JOIN professors p ON t.Professor_ID = p.EmployeeID WHERE e.student_id = ?',
+        [Student_ID], (error, results) =>{
+            if(error){
+                console.log(error)
+            } else {
+                return res.render('mainMenu', {
+                    data:results
                 });
             }
         }

@@ -9,7 +9,8 @@ router.post('/register', authController.register);
 router.post('/index', authController.verify);
 router.post('/searchClasses', authController.searchClasses);
 router.post('/addClass', authController.addClass);
-
+router.post('/deleteClass', authController.deleteClass);
+router.post('/displayCurrentSchedule', authController.displayCurrentSchedule);
 
 
 module.exports = router;
