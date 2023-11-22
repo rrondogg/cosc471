@@ -4,6 +4,7 @@ const mysql = require("mysql");
 const dotenv = require("dotenv");
 const session = require('express-session');
 
+
 dotenv.config({ path: './.env'})
 
 const app = express();
@@ -11,7 +12,7 @@ const app = express();
 const database = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'password',
+    password: 'Goldfish123',
     database: 'registrationsystem'
 })
 
