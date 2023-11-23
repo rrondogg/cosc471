@@ -28,3 +28,11 @@ nav li a:hover {
     color: yellow;
     text-decoration: none;
 }
+
+img.startPage {
+    border: 4px solid steelblue;
+    border-radius: 0px;
+    padding: 0px;
+    width: 1200px;
+    height: 200px;
+  }

@@ -85,34 +85,110 @@ exports.deleteClass = (req, res) => {
         if (error) {
             console.error('Error deleting enrollment:', error);
         } else {
-            return exports.displayCurrentSchedule(req, res);
+            database.query('UPDATE classes SET StudentsEnrolled = StudentsEnrolled - 1 WHERE CRN = ?', [crn], 
+                (error,results) => {
+                    if(error){
+                        console.log(error);
+                    }
+                    return exports.displayCurrentSchedule(req, res);
+                }
+            )
         }
     });
 }
 
+function checkDuplicates(CRN, Student_ID, callback){
+    database.query('SELECT * FROM enrollment WHERE Student_ID = ? AND CRN = ?',[Student_ID, CRN], (error,results) => {
+        console.log("hey im in here checking for duplicates");
+        if(error){
+            console.log(error);
+            callback(error,null);
+        } else {
+            if(results.length > 0){
+                console.log("duplicate is true")
+                callback(null,true);
+            } else {
+                console.log("duplicate is false")
+                callback(null,false);
+            }
+        }
+    })
+}
 
-exports.addClass = (req, res) => { //if you are trying to add a class that does not have a teacher assigned to it, it will not work and will not display
+exports.addClass = (req, res) => {
     console.log(req.body);
     const Student_ID = req.session.studentID;
 
     console.log(req.body.CRN);
     console.log("hey im adding a class!");
 
-    let randInt = Math.floor(Math.random() * 20000);
-    console.log(randInt);
-
-    database.query('INSERT INTO Enrollment SET ?', {Enrollment_ID: randInt, Student_ID: Student_ID, CRN: req.body.CRN},
-        (error, results) => {
-            if (error){
-                console.log(error);
-            } else {
-                return res.render('searchClasses', {
-                    message: "Class added"
-                });
-            }
+    // checking the duplicates first
+    checkDuplicates(req.body.CRN, Student_ID, (error, isDuplicate) => {
+        if (error) {
+            console.log(error);
+            return res.render('searchClasses', {
+                messageFail: "Error occurred while checking duplicates"
+            });
         }
-    )
-}
+
+        if (isDuplicate) {
+            console.log("student already registered");
+            return res.render('searchClasses', {
+                messageFail: "Student already registered in class"
+            });
+        } else {
+            // then do a query to get capacity 
+            database.query('SELECT Capacity, StudentsEnrolled FROM classes WHERE CRN = ?', [req.body.CRN], (error, classInfo) => {
+                if (error) {
+                    console.log(error);
+                    return res.render('searchClasses', {
+                        messageFail: "Error occurred while fetching class information"
+                    });
+                }
+
+                // quick check to see if class is close to capacity
+                const capacity = classInfo[0].Capacity;
+                const studentsEnrolled = classInfo[0].StudentsEnrolled;
+
+                if (studentsEnrolled >= capacity) {
+                    console.log("Class has reached its capacity");
+                    return res.render('searchClasses', {
+                        messageFail: "Class has reached its maximum capacity"
+                    });
+                } else {
+                    // if not, do normal add
+                    let randInt = Math.floor(Math.random() * 20000);
+                    console.log(randInt);
+
+                    database.query('INSERT INTO Enrollment SET ?', { Enrollment_ID: randInt, Student_ID: Student_ID, CRN: req.body.CRN },
+                        (error, results) => {
+                            if (error) {
+                                console.log(error);
+                                return res.render('searchClasses', {
+                                    messageFail: "Error occurred while adding class"
+                                });
+                            } else {
+                                // just updating the amount of students
+                                database.query('UPDATE classes SET StudentsEnrolled = StudentsEnrolled + 1 WHERE CRN = ?', [req.body.CRN],
+                                    (error, results) => {
+                                        if (error) {
+                                            console.log(error);
+                                        }
+                                        return res.render('searchClasses', {
+                                            message: "Class added"
+                                        });
+                                    }
+                                );
+                            }
+                        }
+                    );
+                }
+            });
+        }
+    });
+};
+
+
 
 exports.displayCurrentSchedule = (req, res) => {
     console.log(req.body);

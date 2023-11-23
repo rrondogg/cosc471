@@ -11,7 +11,6 @@
     <nav>
         <h4>GrupoQuatro Registration System</h4>
         <ul>
-            <li><a href="/">Logout</a></li>
             <li><a href="/startPage">Home</a></li>
             <li>
                 <a href="/mainMenu" id="linkForMainMenu">My Classes</a>
@@ -19,11 +18,16 @@
                     <input type="hidden" name="displaySchedule" value="true">
                 </form>
             </li>
+            <li><a href="/">Logout</a></li>
         </ul>
     </nav>
     <div>
         {{#if message}}
-            <h4 class="text-success bg-light p-2 border rounded">{{message}}</h4>
+            <h2 class="text-success bg-light p-2 border rounded">{{message}}</h2>
+        {{else}}
+            {{#if messageFail}}
+                <h2 class="text-success bg-light p-2 border rounded">{{messageFail}}</h2>
+            {{/if}}
         {{/if}}
     </div>
     <div class="container mt-5">
